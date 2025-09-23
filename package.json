@@ -1,0 +1,23 @@
+{
+  "name": "timeline-be",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+     "start": "node app.js",
+    "watch": "node --watch app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatteoVentura7/TimeLine-BE.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MatteoVentura7/TimeLine-BE/issues"
+  },
+  "homepage": "https://github.com/MatteoVentura7/TimeLine-BE#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
