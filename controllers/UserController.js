@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); 
+const db = require('../db');
 const connection = require("../db");
+const bcrypt = require('bcryptjs');
 
 // Funzione per ottenere tutti gli utenti
 const getAllUsers = (req, res) => {
@@ -15,22 +16,31 @@ const getAllUsers = (req, res) => {
   });
 };
 
-
 // Funzione per aggiungere un nuovo utente
 const createUser = (req, res) => {
   const { email, password } = req.body;
 
-  const query = "INSERT INTO user (email, password) VALUES (?, ?)";
-  connection.query(query, [email, password], (err, result) => {
+  // Cripta la password prima di inserirla nel database
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Errore nel server" });
     }
-    res
-      .status(201)
-      .json({ message: "Utente creato con successo", id: result.insertId });
+
+    const query = "INSERT INTO user (email, password) VALUES (?, ?)";
+    connection.query(query, [email, hashedPassword], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore nel server" });
+      }
+      res
+        .status(201)
+        .json({ message: "Utente creato con successo", id: result.insertId });
+    });
   });
 };
+
+
 
 // Funzione per il login
 const loginUser = (req, res) => {
@@ -51,14 +61,29 @@ const loginUser = (req, res) => {
 
     const user = results[0];
     console.log("Utente trovato:", user);
+    bcrypt.hash('1234', 10, (err, hashedPassword) => {
 
-    if (password !== user.password) {
-      console.log("Password non corrisponde");
-      return res.status(401).json({ error: "Credenziali non valide" });
-    }
+      bcrypt.compare('1234', hashedPassword, (err, isMatch) => {
+        console.log(err, isMatch);
 
-    console.log("Login effettuato con successo");
-    res.status(200).json({ message: "Login effettuato con successo" });
+      });
+    });
+    // Comparazione della password criptata
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore nel server" });
+      }
+
+      if (!isMatch) {
+        console.log(err);
+        console.log("Password non corrisponde");
+        return res.status(401).json({ error: "Credenziali non valide" });
+      }
+
+      console.log("Login effettuato con successo");
+      res.status(200).json({ message: "Login effettuato con successo" });
+    });
   });
 };
 
