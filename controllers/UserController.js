@@ -20,22 +20,35 @@ const getAllUsers = (req, res) => {
 const createUser = (req, res) => {
   const { email, password } = req.body;
 
-  // Cripta la password prima di inserirla nel database
-  bcrypt.hash(password, 10, (err, hashedPassword) => {
+  // Controlla se l'email esiste già nel database
+  const checkQuery = "SELECT * FROM user WHERE email = ?";
+  connection.query(checkQuery, [email], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Errore nel server" });
     }
 
-    const query = "INSERT INTO user (email, password) VALUES (?, ?)";
-    connection.query(query, [email, hashedPassword], (err, result) => {
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Email già esistente" });
+    }
+
+    // Cripta la password prima di inserirla nel database
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Errore nel server" });
       }
-      res
-        .status(201)
-        .json({ message: "Utente creato con successo", id: result.insertId });
+
+      const query = "INSERT INTO user (email, password) VALUES (?, ?)";
+      connection.query(query, [email, hashedPassword], (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Errore nel server" });
+        }
+        res
+          .status(201)
+          .json({ message: "Utente creato con successo", id: result.insertId });
+      });
     });
   });
 };
