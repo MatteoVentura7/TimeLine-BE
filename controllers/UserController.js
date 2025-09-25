@@ -16,9 +16,27 @@ const getAllUsers = (req, res) => {
   });
 };
 
+// Funzione per validare la password
+const validatePassword = (password) => {
+  if (password.length < 8) {
+    return 'La password deve contenere almeno 8 caratteri.';
+  } else if (!/[A-Z]/.test(password)) {
+    return 'La password deve contenere almeno una lettera maiuscola.';
+  } else if (!/[0-9]/.test(password)) {
+    return 'La password deve contenere almeno un numero.';
+  }
+  return '';
+};
+
 // Funzione per aggiungere un nuovo utente
 const createUser = (req, res) => {
   const { email, password } = req.body;
+
+  // Validazione della password
+  const passwordValidationMessage = validatePassword(password);
+  if (passwordValidationMessage) {
+    return res.status(400).json({ error: passwordValidationMessage });
+  }
 
   // Controlla se l'email esiste già nel database
   const checkQuery = "SELECT * FROM user WHERE email = ?";
