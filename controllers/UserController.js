@@ -1,8 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
 const connection = require("../db");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 // Funzione per ottenere tutti gli utenti
 const getAllUsers = (req, res) => {
@@ -19,13 +17,13 @@ const getAllUsers = (req, res) => {
 // Funzione per validare la password
 const validatePassword = (password) => {
   if (password.length < 8) {
-    return 'La password deve contenere almeno 8 caratteri.';
+    return "La password deve contenere almeno 8 caratteri.";
   } else if (!/[A-Z]/.test(password)) {
-    return 'La password deve contenere almeno una lettera maiuscola.';
+    return "La password deve contenere almeno una lettera maiuscola.";
   } else if (!/[0-9]/.test(password)) {
-    return 'La password deve contenere almeno un numero.';
+    return "La password deve contenere almeno un numero.";
   }
-  return '';
+  return "";
 };
 
 // Funzione per aggiungere un nuovo utente
@@ -71,8 +69,6 @@ const createUser = (req, res) => {
   });
 };
 
-
-
 // Funzione per il login
 const loginUser = (req, res) => {
   const { email, password } = req.body;
@@ -92,13 +88,7 @@ const loginUser = (req, res) => {
 
     const user = results[0];
     console.log("Utente trovato:", user);
-    bcrypt.hash('1234', 10, (err, hashedPassword) => {
 
-      bcrypt.compare('1234', hashedPassword, (err, isMatch) => {
-        console.log(err, isMatch);
-
-      });
-    });
     // Comparazione della password criptata
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) {
@@ -107,13 +97,19 @@ const loginUser = (req, res) => {
       }
 
       if (!isMatch) {
-        console.log(err);
         console.log("Password non corrisponde");
         return res.status(401).json({ error: "Credenziali non valide" });
       }
 
+      // Generazione del token JWT
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        "your_secret_key",
+        { expiresIn: "1h" }
+      );
+
       console.log("Login effettuato con successo");
-      res.status(200).json({ message: "Login effettuato con successo" });
+      res.status(200).json({ message: "Login effettuato con successo", token });
     });
   });
 };

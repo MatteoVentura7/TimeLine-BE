@@ -4,11 +4,12 @@ const {
   loginUser,
   createUser
 } = require("../controllers/UserController");
+const authenticateToken = require("../middlewares/authenticateToken");
 
 const router = express.Router();
 
 // Definizione delle rotte
-router.get("/", getAllUsers); // Ottieni tutti gli utenti
+router.get("/", authenticateToken, getAllUsers); // Ottieni tutti gli utenti (protetto)
 router.post("/login", loginUser); // Login utente
 router.post("/", createUser); // Crea un nuovo utente
 
