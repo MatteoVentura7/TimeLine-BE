@@ -1,6 +1,16 @@
 const connection = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+
+// Configurazione del trasportatore Nodemailer
+const transporter = nodemailer.createTransport({
+  service: "gmail", 
+  auth: {
+    user: "matteo.timeline@gmail.com", // Sostituisci con la tua email
+    pass: "phhk bcvo kisl hiqv", // Sostituisci con la tua password o app password
+  },
+});
 
 // Funzione per ottenere tutti gli utenti
 const getAllUsers = (req, res) => {
@@ -61,9 +71,27 @@ const createUser = (req, res) => {
           console.error(err);
           return res.status(500).json({ error: "Errore nel server" });
         }
-        res
-          .status(201)
-          .json({ message: "Utente creato con successo", id: result.insertId });
+
+        // Invia email di conferma
+        const mailOptions = {
+          from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
+          to: email,
+          subject: "Conferma Registrazione",
+          text: `Grazie per esserti registrato! Il tuo account è stato creato con successo.`,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Errore durante l'invio dell'email:", error);
+          } else {
+            console.log("Email inviata:", info.response);
+          }
+        });
+
+        res.status(201).json({
+          message: "Utente creato con successo. Controlla la tua email per la conferma.",
+          id: result.insertId,
+        });
       });
     });
   });
