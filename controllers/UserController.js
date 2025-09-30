@@ -2,6 +2,7 @@ const connection = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const crypto = require("crypto"); // Per generare token univoci
 
 // Configurazione del trasportatore Nodemailer
 const transporter = nodemailer.createTransport({
@@ -65,8 +66,12 @@ const createUser = (req, res) => {
         return res.status(500).json({ error: "Errore nel server" });
       }
 
-      const query = "INSERT INTO user (email, password) VALUES (?, ?)";
-      connection.query(query, [email, hashedPassword], (err, result) => {
+      // Genera un token univoco per la conferma dell'email
+      const emailToken = crypto.randomBytes(32).toString("hex");
+      const confirmationLink = `http://localhost:3000/confirm-email?token=${emailToken}`;
+
+      const query = "INSERT INTO user (email, password, emailToken, isConfirmed) VALUES (?, ?, ?, ?)";
+      connection.query(query, [email, hashedPassword, emailToken, false], (err, result) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ error: "Errore nel server" });
@@ -76,8 +81,8 @@ const createUser = (req, res) => {
         const mailOptions = {
           from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
           to: email,
-          subject: "Conferma Registrazione",
-          text: `Grazie per esserti registrato! Il tuo account è stato creato con successo.`,
+          subject: "Conferma la tua email",
+          text: `Clicca sul seguente link per confermare la tua email: ${confirmationLink}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -116,6 +121,11 @@ const loginUser = (req, res) => {
 
     const user = results[0];
     console.log("Utente trovato:", user);
+
+    // Controlla se l'email è stata confermata
+    if (!user.isConfirmed) {
+      return res.status(403).json({ error: "Email non confermata. Controlla la tua email per completare la registrazione." });
+    }
 
     // Comparazione della password criptata
     bcrypt.compare(password, user.password, (err, isMatch) => {
