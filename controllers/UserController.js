@@ -210,10 +210,53 @@ const confirmEmail = (req, res) => {
   });
 };
 
+// Controller per gestire l'invio dell'email di reset della password
+const sendResetPasswordEmail = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email è obbligatoria." });
+  }
+
+  try {
+    // Configura il trasportatore nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "matteo.timeline@gmail.com", // Sostituisci con la tua email
+        pass: "phhk bcvo kisl hiqv", // Sostituisci con la tua password o app password
+      },
+    });
+
+    // Opzioni per l'email
+    const mailOptions = {
+      from: "matteo.timeline@gmail.com",
+      to: email,
+      subject: "Richiesta di reset della password",
+      text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:3000/reset-password?email=${encodeURIComponent(
+        email
+      )}`,
+    };
+
+    // Invia l'email
+    await transporter.sendMail(mailOptions);
+
+    res
+      .status(200)
+      .json({ message: "Link per il reset inviato con successo." });
+  } catch (error) {
+    console.error("Errore durante l'invio dell'email:", error);
+    res
+      .status(500)
+      .json({ message: "Impossibile inviare il link per il reset." });
+  }
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
   createUser,
   loginUser,
   confirmEmail,
+  sendResetPasswordEmail,
 };

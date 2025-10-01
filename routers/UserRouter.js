@@ -3,7 +3,8 @@ const {
   getAllUsers,
   loginUser,
   createUser,
-  confirmEmail
+  confirmEmail,
+  sendResetPasswordEmail
 } = require("../controllers/UserController");
 const authenticateToken = require("../middlewares/authenticateToken");
 
@@ -14,6 +15,7 @@ router.get("/", authenticateToken, getAllUsers); // Ottieni tutti gli utenti (pr
 router.post("/login", loginUser); // Login utente
 router.post("/", createUser); // Crea un nuovo utente
 router.post("/confirm-email", confirmEmail); // Conferma email
+router.post("/reset-password", sendResetPasswordEmail); // Invia email di reset della password
 
 module.exports = router;
 
