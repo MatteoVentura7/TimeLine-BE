@@ -12,6 +12,7 @@ const router = express.Router();
 router.get("/", authenticateToken, getAllUsers); // Ottieni tutti gli utenti (protetto)
 router.post("/login", loginUser); // Login utente
 router.post("/", createUser); // Crea un nuovo utente
+router.post("/forgot-password", ); // Password dimenticata
 
 module.exports = router;
 

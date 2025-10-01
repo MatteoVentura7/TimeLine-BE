@@ -68,7 +68,7 @@ const createUser = (req, res) => {
 
       // Genera un token univoco per la conferma dell'email
       const emailToken = crypto.randomBytes(32).toString("hex");
-      const confirmationLink = `http://localhost:3000/confirm-email?token=${emailToken}`;
+      const confirmationLink = `http://localhost:5173/login?token=${emailToken}`;
 
       const query = "INSERT INTO user (email, password, emailToken, isConfirmed) VALUES (?, ?, ?, ?)";
       connection.query(query, [email, hashedPassword, emailToken, false], (err, result) => {
