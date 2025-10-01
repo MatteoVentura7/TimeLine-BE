@@ -6,7 +6,7 @@ const crypto = require("crypto"); // Per generare token univoci
 
 // Configurazione del trasportatore Nodemailer
 const transporter = nodemailer.createTransport({
-  service: "gmail", 
+  service: "gmail",
   auth: {
     user: "matteo.timeline@gmail.com", // Sostituisci con la tua email
     pass: "phhk bcvo kisl hiqv", // Sostituisci con la tua password o app password
@@ -68,36 +68,42 @@ const createUser = (req, res) => {
 
       // Genera un token univoco per la conferma dell'email
       const emailToken = crypto.randomBytes(32).toString("hex");
-      const confirmationLink = `http://localhost:5173/login?token=${emailToken}`;
+      const confirmationLink = `http://localhost:5173/confirm-email?token=${emailToken}`;
 
-      const query = "INSERT INTO user (email, password, emailToken, isConfirmed) VALUES (?, ?, ?, ?)";
-      connection.query(query, [email, hashedPassword, emailToken, false], (err, result) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: "Errore nel server" });
-        }
-
-        // Invia email di conferma
-        const mailOptions = {
-          from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
-          to: email,
-          subject: "Conferma la tua email",
-          text: `Clicca sul seguente link per confermare la tua email: ${confirmationLink}`,
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Errore durante l'invio dell'email:", error);
-          } else {
-            console.log("Email inviata:", info.response);
+      const query =
+        "INSERT INTO user (email, password, emailToken, isConfirmed) VALUES (?, ?, ?, ?)";
+      connection.query(
+        query,
+        [email, hashedPassword, emailToken, false],
+        (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Errore nel server" });
           }
-        });
 
-        res.status(201).json({
-          message: "Utente creato con successo. Controlla la tua email per la conferma.",
-          id: result.insertId,
-        });
-      });
+          // Invia email di conferma
+          const mailOptions = {
+            from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
+            to: email,
+            subject: "Conferma la tua email",
+            text: `Clicca sul seguente link per confermare la tua email: ${confirmationLink}`,
+          };
+
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.error("Errore durante l'invio dell'email:", error);
+            } else {
+              console.log("Email inviata:", info.response);
+            }
+          });
+
+          res.status(201).json({
+            message:
+              "Utente creato con successo. Controlla la tua email per la conferma.",
+            id: result.insertId,
+          });
+        }
+      );
     });
   });
 };
@@ -124,7 +130,10 @@ const loginUser = (req, res) => {
 
     // Controlla se l'email è stata confermata
     if (!user.isConfirmed) {
-      return res.status(403).json({ error: "Email non confermata. Controlla la tua email per completare la registrazione." });
+      return res.status(403).json({
+        error:
+          "Email non confermata. Controlla la tua email per completare la registrazione.",
+      });
     }
 
     // Comparazione della password criptata
@@ -152,9 +161,59 @@ const loginUser = (req, res) => {
   });
 };
 
+// Funzione per confermare l'email e reindirizzare al login
+const confirmEmail = (req, res) => {
+  const { token, email, password } = req.body;
+
+  // Verifica se il token esiste nel database
+  const query = "SELECT * FROM user WHERE emailToken = ?";
+  connection.query(query, [token], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore nel server" });
+    }
+
+    if (results.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Token non valido o già utilizzato." });
+    }
+
+    const user = results[0];
+
+    // Verifica le credenziali
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore nel server" });
+      }
+
+      if (!isMatch || user.email !== email) {
+        return res.status(401).json({ error: "Credenziali non valide." });
+      }
+
+      // Aggiorna il valore di isConfirmed
+      const updateQuery =
+        "UPDATE user SET isConfirmed = 1, emailToken = NULL WHERE id = ?";
+      connection.query(updateQuery, [user.id], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Errore nel server" });
+        }
+
+        res.status(200).json({
+          message:
+            "Email confermata con successo. Ora puoi effettuare il login.",
+        });
+      });
+    });
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
   createUser,
   loginUser,
+  confirmEmail,
 };
