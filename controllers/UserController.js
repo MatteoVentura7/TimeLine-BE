@@ -233,7 +233,7 @@ const sendResetPasswordEmail = async (req, res) => {
       from: "matteo.timeline@gmail.com",
       to: email,
       subject: "Richiesta di reset della password",
-      text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:3000/reset-password?email=${encodeURIComponent(
+      text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:5173/reset-password?email=${encodeURIComponent(
         email
       )}`,
     };
