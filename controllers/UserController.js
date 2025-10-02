@@ -252,6 +252,49 @@ const sendResetPasswordEmail = async (req, res) => {
   }
 };
 
+// Funzione per aggiornare la password 
+const updatePassword = (req, res) => {
+  const { email, newPassword } = req.body;
+
+  // Validazione della nuova password
+  const passwordValidationMessage = validatePassword(newPassword);
+  if (passwordValidationMessage) {
+    return res.status(400).json({ error: passwordValidationMessage });
+  }
+
+  // Controlla se l'utente esiste nel database
+  const query = "SELECT * FROM user WHERE email = ?";
+  connection.query(query, [email], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore nel server" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Utente non trovato" });
+    }
+
+    // Cripta la nuova password
+    bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore nel server" });
+      }
+
+      // Aggiorna la password nel database
+      const updateQuery = "UPDATE user SET password = ? WHERE email = ?";
+      connection.query(updateQuery, [hashedPassword, email], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Errore nel server" });
+        }
+
+        res.status(200).json({ message: "Password aggiornata con successo" });
+      });
+    });
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -259,4 +302,5 @@ module.exports = {
   loginUser,
   confirmEmail,
   sendResetPasswordEmail,
+  updatePassword,
 };
