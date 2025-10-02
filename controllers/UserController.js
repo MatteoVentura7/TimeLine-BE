@@ -198,7 +198,7 @@ const confirmEmail = (req, res) => {
   });
 };
 
-// Modifica della funzione sendResetPasswordEmail per salvare il token nel database
+//  funzione sendResetPasswordEmail per salvare il token nel database
 const sendResetPasswordEmail = async (req, res) => {
   const { email } = req.body;
 
