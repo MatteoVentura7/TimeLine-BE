@@ -198,7 +198,7 @@ const confirmEmail = (req, res) => {
   });
 };
 
-// Controller per gestire l'invio dell'email di reset della password
+// Modifica della funzione sendResetPasswordEmail per salvare il token nel database
 const sendResetPasswordEmail = async (req, res) => {
   const { email } = req.body;
 
@@ -207,42 +207,64 @@ const sendResetPasswordEmail = async (req, res) => {
   }
 
   try {
-    // Configura il trasportatore nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "matteo.timeline@gmail.com", // Sostituisci con la tua email
-        pass: "phhk bcvo kisl hiqv", // Sostituisci con la tua password o app password
-      },
+    // Controlla se l'utente esiste nel database
+    const query = "SELECT * FROM user WHERE email = ?";
+    connection.query(query, [email], async (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore nel server" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+
+      // Genera un token univoco per il reset della password
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const updateQuery = "UPDATE user SET resetToken = ? WHERE email = ?";
+
+      connection.query(updateQuery, [resetToken, email], async (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Errore nel server" });
+        }
+
+        // Configura il trasportatore nodemailer
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "matteo.timeline@gmail.com", // Sostituisci con la tua email
+            pass: "phhk bcvo kisl hiqv", // Sostituisci con la tua password o app password
+          },
+        });
+
+        // Opzioni per l'email
+        const mailOptions = {
+          from: "matteo.timeline@gmail.com",
+          to: email,
+          subject: "Richiesta di reset della password",
+          text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:5173/reset-password?token=${resetToken}`,
+        };
+
+        // Invia l'email
+        try {
+          await transporter.sendMail(mailOptions);
+          res.status(200).json({ message: "Link per il reset inviato con successo." });
+        } catch (error) {
+          console.error("Errore durante l'invio dell'email:", error);
+          res.status(500).json({ message: "Impossibile inviare il link per il reset." });
+        }
+      });
     });
-
-    // Opzioni per l'email
-    const mailOptions = {
-      from: "matteo.timeline@gmail.com",
-      to: email,
-      subject: "Richiesta di reset della password",
-      text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:5173/reset-password?email=${encodeURIComponent(
-        email
-      )}`,
-    };
-
-    // Invia l'email
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(200)
-      .json({ message: "Link per il reset inviato con successo." });
   } catch (error) {
-    console.error("Errore durante l'invio dell'email:", error);
-    res
-      .status(500)
-      .json({ message: "Impossibile inviare il link per il reset." });
+    console.error("Errore durante l'elaborazione della richiesta:", error);
+    res.status(500).json({ message: "Errore interno del server." });
   }
 };
 
-// Funzione per aggiornare la password 
+// Modifica della funzione updatePassword per includere la verifica del token
 const updatePassword = (req, res) => {
-  const { email, newPassword } = req.body;
+  const { token, newPassword } = req.body;
 
   // Validazione della nuova password
   const passwordValidationMessage = validatePassword(newPassword);
@@ -250,17 +272,19 @@ const updatePassword = (req, res) => {
     return res.status(400).json({ error: passwordValidationMessage });
   }
 
-  // Controlla se l'utente esiste nel database
-  const query = "SELECT * FROM user WHERE email = ?";
-  connection.query(query, [email], (err, results) => {
+  // Controlla se il token esiste nel database
+  const query = "SELECT * FROM user WHERE resetToken = ?";
+  connection.query(query, [token], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Errore nel server" });
     }
 
     if (results.length === 0) {
-      return res.status(404).json({ error: "Utente non trovato" });
+      return res.status(404).json({ error: "Token non valido o scaduto" });
     }
+
+    const user = results[0];
 
     // Cripta la nuova password
     bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
@@ -269,9 +293,9 @@ const updatePassword = (req, res) => {
         return res.status(500).json({ error: "Errore nel server" });
       }
 
-      // Aggiorna la password nel database
-      const updateQuery = "UPDATE user SET password = ? WHERE email = ?";
-      connection.query(updateQuery, [hashedPassword, email], (err) => {
+      // Aggiorna la password e rimuove il token dal database
+      const updateQuery = "UPDATE user SET password = ?, resetToken = NULL WHERE id = ?";
+      connection.query(updateQuery, [hashedPassword, user.id], (err) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ error: "Errore nel server" });
