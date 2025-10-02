@@ -163,7 +163,7 @@ const loginUser = (req, res) => {
 
 // Funzione per confermare l'email e reindirizzare al login
 const confirmEmail = (req, res) => {
-  const { token, email, password } = req.body;
+  const { token } = req.body;
 
   // Verifica se il token esiste nel database
   const query = "SELECT * FROM user WHERE emailToken = ?";
@@ -181,30 +181,18 @@ const confirmEmail = (req, res) => {
 
     const user = results[0];
 
-    // Verifica le credenziali
-    bcrypt.compare(password, user.password, (err, isMatch) => {
+    // Aggiorna il valore di isConfirmed
+    const updateQuery =
+      "UPDATE user SET isConfirmed = 1, emailToken = NULL WHERE id = ?";
+    connection.query(updateQuery, [user.id], (err) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Errore nel server" });
       }
 
-      if (!isMatch || user.email !== email) {
-        return res.status(401).json({ error: "Credenziali non valide." });
-      }
-
-      // Aggiorna il valore di isConfirmed
-      const updateQuery =
-        "UPDATE user SET isConfirmed = 1, emailToken = NULL WHERE id = ?";
-      connection.query(updateQuery, [user.id], (err) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: "Errore nel server" });
-        }
-
-        res.status(200).json({
-          message:
-            "Email confermata con successo. Ora puoi effettuare il login.",
-        });
+      res.status(200).json({
+        message:
+          "Email confermata con successo. Ora puoi effettuare il login.",
       });
     });
   });
