@@ -19,7 +19,7 @@ const getAllUsers = (req, res) => {
   connection.query(query, (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).send("Errore nel server");
+      return res.status(500).send("Server error");
     }
     res.json(results);
   });
@@ -28,11 +28,11 @@ const getAllUsers = (req, res) => {
 // Funzione per validare la password
 const validatePassword = (password) => {
   if (password.length < 8) {
-    return "La password deve contenere almeno 8 caratteri.";
+    return "The password must be at least 8 characters long.";
   } else if (!/[A-Z]/.test(password)) {
-    return "La password deve contenere almeno una lettera maiuscola.";
+    return "The password must contain at least one uppercase letter.";
   } else if (!/[0-9]/.test(password)) {
-    return "La password deve contenere almeno un numero.";
+    return "The password must contain at least one number.";
   }
   return "";
 };
@@ -52,7 +52,7 @@ const createUser = (req, res) => {
   connection.query(checkQuery, [email], (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Errore nel server" });
+      return res.status(500).json({ error: "Server error" });
     }
 
     if (results.length > 0) {
@@ -63,7 +63,7 @@ const createUser = (req, res) => {
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Errore nel server" });
+        return res.status(500).json({ error: "Server error" });
       }
 
       // Genera un token univoco per la conferma dell'email
@@ -78,7 +78,7 @@ const createUser = (req, res) => {
         (err, result) => {
           if (err) {
             console.error(err);
-            return res.status(500).json({ error: "Errore nel server" });
+            return res.status(500).json({ error: "Server error" });
           }
 
           // Invia email di conferma
@@ -91,7 +91,7 @@ const createUser = (req, res) => {
 
           transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-              console.error("Errore durante l'invio dell'email:", error);
+              console.error("Error while sending email:", error);
             } else {
               console.log("Email inviata:", info.response);
             }
@@ -99,7 +99,7 @@ const createUser = (req, res) => {
 
           res.status(201).json({
             message:
-              "Utente creato con successo. Controlla la tua email per la conferma.",
+              "User successfully created. Check your email for confirmation.",
             id: result.insertId,
           });
         }
@@ -117,7 +117,7 @@ const loginUser = (req, res) => {
   connection.query(query, [email], (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Errore nel server" });
+      return res.status(500).json({ error: "Server error" });
     }
 
     if (results.length === 0) {
@@ -132,7 +132,7 @@ const loginUser = (req, res) => {
     if (!user.isConfirmed) {
       return res.status(403).json({
         error:
-          "Email non confermata. Controlla la tua email per completare la registrazione.",
+          "Email not confirmed. Check your email to complete the registration.",
       });
     }
 
@@ -140,7 +140,7 @@ const loginUser = (req, res) => {
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Errore nel server" });
+        return res.status(500).json({ error: "Server error" });
       }
 
       if (!isMatch) {
@@ -156,7 +156,7 @@ const loginUser = (req, res) => {
       );
 
       console.log("Login effettuato con successo");
-      res.status(200).json({ message: "Login effettuato con successo", token });
+      res.status(200).json({ message: "Login successful", token });
     });
   });
 };
@@ -170,7 +170,7 @@ const confirmEmail = (req, res) => {
   connection.query(query, [token], (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Errore nel server" });
+      return res.status(500).json({ error: "Server error" });
     }
 
     if (results.length === 0) {
@@ -187,11 +187,11 @@ const confirmEmail = (req, res) => {
     connection.query(updateQuery, [user.id], (err) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Errore nel server" });
+        return res.status(500).json({ error: "Server error" });
       }
 
       res.status(200).json({
-        message: "Email confermata con successo. Ora puoi effettuare il login.",
+        message: "Email successfully confirmed. You can now log in.",
       });
     });
   });
@@ -211,7 +211,7 @@ const sendResetPasswordEmail = async (req, res) => {
     connection.query(query, [email], async (err, results) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Errore nel server" });
+        return res.status(500).json({ error: "Server error" });
       }
 
       if (results.length === 0) {
@@ -225,7 +225,7 @@ const sendResetPasswordEmail = async (req, res) => {
       connection.query(updateQuery, [resetToken, email], async (err) => {
         if (err) {
           console.error(err);
-          return res.status(500).json({ error: "Errore nel server" });
+          return res.status(500).json({ error: "Server error" });
         }
 
         // Configura il trasportatore nodemailer
@@ -248,11 +248,9 @@ const sendResetPasswordEmail = async (req, res) => {
         // Invia l'email
         try {
           await transporter.sendMail(mailOptions);
-          res
-            .status(200)
-            .json({ message: "Link per il reset inviato con successo." });
+          res.status(200).json({ message: "Reset link successfully sent." });
         } catch (error) {
-          console.error("Errore durante l'invio dell'email:", error);
+          console.error("Error while sending email:", error);
           res
             .status(500)
             .json({ message: "Impossibile inviare il link per il reset." });
@@ -260,8 +258,8 @@ const sendResetPasswordEmail = async (req, res) => {
       });
     });
   } catch (error) {
-    console.error("Errore durante l'elaborazione della richiesta:", error);
-    res.status(500).json({ message: "Errore interno del server." });
+    console.error("Error processing the request:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -280,7 +278,7 @@ const updatePassword = (req, res) => {
   connection.query(query, [token], (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: "Errore nel server" });
+      return res.status(500).json({ error: "Server error" });
     }
 
     if (results.length === 0) {
@@ -293,7 +291,7 @@ const updatePassword = (req, res) => {
     bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Errore nel server" });
+        return res.status(500).json({ error: "Server error" });
       }
 
       // Aggiorna la password e rimuove il token dal database
@@ -302,10 +300,10 @@ const updatePassword = (req, res) => {
       connection.query(updateQuery, [hashedPassword, user.id], (err) => {
         if (err) {
           console.error(err);
-          return res.status(500).json({ error: "Errore nel server" });
+          return res.status(500).json({ error: "Server error" });
         }
 
-        res.status(200).json({ message: "Password aggiornata con successo" });
+        res.status(200).json({ message: "Password updated successfully" });
       });
     });
   });
