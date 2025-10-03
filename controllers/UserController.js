@@ -148,6 +148,23 @@ const loginUser = (req, res) => {
         return res.status(401).json({ error: "Credenziali non valide" });
       }
 
+      // Log per verificare il valore di isAdmin
+      console.log("Valore di isAdmin nel database:", user.isAdmin);
+
+      // Controllo se l'utente è un amministratore
+      if (user.isAdmin) {
+        console.log("Accesso come amministratore");
+        return res.status(200).json({
+          message: "Admin access granted",
+          redirect: "/admin",
+          IsAdmin: user.isAdmin,
+        });
+      }
+
+      // Log per verificare il valore di isAdmin per utenti non admin
+      console.log("Accesso come utente normale, isAdmin:", user.isAdmin);
+      console.log("Valore di isAdmin nel database:", IsAdmin);
+
       // Generazione del token JWT
       const token = jwt.sign(
         { id: user.id, email: user.email },
