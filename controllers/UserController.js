@@ -191,8 +191,7 @@ const confirmEmail = (req, res) => {
       }
 
       res.status(200).json({
-        message:
-          "Email confermata con successo. Ora puoi effettuare il login.",
+        message: "Email confermata con successo. Ora puoi effettuare il login.",
       });
     });
   });
@@ -249,10 +248,14 @@ const sendResetPasswordEmail = async (req, res) => {
         // Invia l'email
         try {
           await transporter.sendMail(mailOptions);
-          res.status(200).json({ message: "Link per il reset inviato con successo." });
+          res
+            .status(200)
+            .json({ message: "Link per il reset inviato con successo." });
         } catch (error) {
           console.error("Errore durante l'invio dell'email:", error);
-          res.status(500).json({ message: "Impossibile inviare il link per il reset." });
+          res
+            .status(500)
+            .json({ message: "Impossibile inviare il link per il reset." });
         }
       });
     });
@@ -294,7 +297,8 @@ const updatePassword = (req, res) => {
       }
 
       // Aggiorna la password e rimuove il token dal database
-      const updateQuery = "UPDATE user SET password = ?, resetToken = NULL WHERE id = ?";
+      const updateQuery =
+        "UPDATE user SET password = ?, resetToken = NULL WHERE id = ?";
       connection.query(updateQuery, [hashedPassword, user.id], (err) => {
         if (err) {
           console.error(err);
