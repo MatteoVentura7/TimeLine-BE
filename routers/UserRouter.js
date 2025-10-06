@@ -15,9 +15,9 @@ const router = express.Router();
 router.get("/", authenticateToken, getAllUsers); // Ottieni tutti gli utenti (protetto)
 router.post("/login", loginUser); // Login utente
 router.post("/", createUser); // Crea un nuovo utente
-router.post("/confirm-email", confirmEmail); // Conferma email
+router.post("/confirm-email", confirmEmail, authenticateToken); // Conferma email
 router.post("/reset-password", sendResetPasswordEmail); // Invia email di reset della password
-router.put("/update-password", updatePassword); // Aggiorna la password
+router.put("/update-password", updatePassword , authenticateToken); // Aggiorna la password
 
 module.exports = router;
 

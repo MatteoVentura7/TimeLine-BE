@@ -86,7 +86,10 @@ const createUser = (req, res) => {
             from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
             to: email,
             subject: "Conferma la tua email",
-            text: `Clicca sul seguente link per confermare la tua email: ${confirmationLink}`,
+                    html: `
+            <p>Clicca sul seguente link per confermare la tua email:</p>
+            <a href="${confirmationLink}">Conferma Email</a>
+    `,
           };
 
           transporter.sendMail(mailOptions, (error, info) => {
@@ -165,8 +168,7 @@ const loginUser = (req, res) => {
 const confirmEmail = (req, res) => {
   const { token } = req.body;
 
-  // Verifica se il token esiste nel database
-  const query = "SELECT * FROM user WHERE emailToken = ?";
+ 
   connection.query(query, [token], (err, results) => {
     if (err) {
       console.error(err);
@@ -242,7 +244,10 @@ const sendResetPasswordEmail = async (req, res) => {
           from: "matteo.timeline@gmail.com",
           to: email,
           subject: "Richiesta di reset della password",
-          text: `Clicca sul seguente link per reimpostare la tua password: http://localhost:5173/reset-password?token=${resetToken}`,
+           html: `
+            <p>Clicca sul seguente link per reimpostare la tua password:</p>
+            <a href="http://localhost:5173/reset-password?token=${resetToken}">Reset Password</a>
+    `,
         };
 
         // Invia l'email
@@ -263,7 +268,7 @@ const sendResetPasswordEmail = async (req, res) => {
   }
 };
 
-// Modifica della funzione updatePassword per includere la verifica del token
+// Modifica della funzione updatePassword per includere la verifica del token e invio email di conferma
 const updatePassword = (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -302,6 +307,22 @@ const updatePassword = (req, res) => {
           console.error(err);
           return res.status(500).json({ error: "Server error" });
         }
+
+        // Invia email di conferma
+        const mailOptions = {
+          from: "matteo.timeline@gmail.com",
+          to: user.email,
+          subject: "Conferma cambio password",
+          text: "La tua password è stata cambiata con successo.",
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Errore durante l'invio dell'email:", error);
+          } else {
+            console.log("Email di conferma inviata:", info.response);
+          }
+        });
 
         res.status(200).json({ message: "Password updated successfully" });
       });
