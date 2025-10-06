@@ -163,7 +163,7 @@ const loginUser = (req, res) => {
 
       // Log per verificare il valore di isAdmin per utenti non admin
       console.log("Accesso come utente normale, isAdmin:", user.isAdmin);
-      console.log("Valore di isAdmin nel database:", IsAdmin);
+     
 
       // Generazione del token JWT
       const token = jwt.sign(
