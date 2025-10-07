@@ -377,6 +377,64 @@ const verifyEmailToken = (req, res) => {
   });
 };
 
+// Funzione per eliminare un utente
+const deleteUser = (req, res) => {
+  const { id } = req.params;
+  const query = "DELETE FROM user WHERE id = ?";
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Errore nel server");
+    }
+    res.send("Utente eliminato con successo");
+  });
+};
+
+// Funzione per aggiungere un nuovo utente
+const createNewUser = (req, res) => {
+  const { email, password } = req.body;
+
+  // Validazione della password
+  const passwordValidationMessage = validatePassword(password);
+  if (passwordValidationMessage) {
+    return res.status(400).json({ error: passwordValidationMessage });
+  }
+
+  // Controlla se l'email esiste già nel database
+  const checkQuery = "SELECT * FROM user WHERE email = ?";
+  connection.query(checkQuery, [email], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Email già esistente" });
+    }
+
+    // Cripta la password prima di inserirla nel database
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+
+      const query =
+        "INSERT INTO user (email, password, isConfirmed) VALUES (?, ?, ?)";
+      connection.query(
+        query,
+        [email, hashedPassword, true],
+        (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Server error" });
+          }
+        }
+      );
+    });
+  });
+} // Chiude la funzione principale
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -387,4 +445,6 @@ module.exports = {
   updatePassword,
   verifyResetToken,
   verifyEmailToken,
+  deleteUser,
+  createNewUser,
 };
