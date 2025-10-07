@@ -168,7 +168,8 @@ const loginUser = (req, res) => {
 const confirmEmail = (req, res) => {
   const { token } = req.body;
 
- 
+  const query = "SELECT * FROM user WHERE emailToken = ?"; // Definizione della query
+
   connection.query(query, [token], (err, results) => {
     if (err) {
       console.error(err);
@@ -330,6 +331,52 @@ const updatePassword = (req, res) => {
   });
 };
 
+// Funzione per verificare il token di reset della password
+const verifyResetToken = (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ error: "Token mancante." });
+  }
+
+  const query = "SELECT * FROM user WHERE resetToken = ?";
+  connection.query(query, [token], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore del server." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Token non valido o scaduto." });
+    }
+
+    res.status(200).json({ message: "Token valido." });
+  });
+};
+
+// Funzione per verificare il token di conferma dell'email
+const verifyEmailToken = (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ error: "Token mancante." });
+  }
+
+  const query = "SELECT * FROM user WHERE emailToken = ?";
+  connection.query(query, [token], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore del server." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Token non valido o scaduto." });
+    }
+
+    res.status(200).json({ message: "Token valido." });
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -338,4 +385,6 @@ module.exports = {
   confirmEmail,
   sendResetPasswordEmail,
   updatePassword,
+  verifyResetToken,
+  verifyEmailToken,
 };
