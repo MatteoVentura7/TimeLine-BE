@@ -10,6 +10,7 @@ const {
   verifyEmailToken,
   deleteUser,
   createNewUser,
+  updateUserEmail,
 } = require("../controllers/UserController");
 const authenticateToken = require("../middlewares/authenticateToken");
 
@@ -26,6 +27,7 @@ router.get("/verify-reset-token", verifyResetToken); // Verifica il token di res
 router.get("/verify-email-token", verifyEmailToken); // Verifica il token di conferma dell'email
 router.delete("/:id", deleteUser); // Elimina un utente
 router.post("/new-user", createNewUser); // Crea un nuovo utente
+router.put("/update-email/:id", updateUserEmail); // Aggiorna l'email di un utente
 
 module.exports = router;
 

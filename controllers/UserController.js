@@ -435,6 +435,22 @@ const createNewUser = (req, res) => {
   });
 } // Chiude la funzione principale
 
+// Funzione per aggiornare l'email di un utente
+const updateUserEmail = (req, res) => {
+  const { id } = req.params;
+  const { email } = req.body;
+
+  const query = "UPDATE user SET email = ? WHERE id = ?";
+  connection.query(query, [email, id], (err, result) => {
+    if (err) {
+      console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+      res.status(200).json({ message: "Utente aggiornato con successo" });
+    });
+  };
+
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -447,4 +463,5 @@ module.exports = {
   verifyEmailToken,
   deleteUser,
   createNewUser,
+  updateUserEmail,
 };
