@@ -445,7 +445,7 @@ const updateUserEmail = (req, res) => {
     }
 
     if (results.length > 0) {
-      return res.status(400).json({ error: "Email già esistente" });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
     // Aggiorna l'email dell'utente
@@ -455,7 +455,7 @@ const updateUserEmail = (req, res) => {
         console.error(err);
         return res.status(500).json({ error: "Server error" });
       }
-      res.status(200).json({ message: "Utente aggiornato con successo" });
+      res.status(200).json({ message: "User email updated successfully" });
     });
   });
 };
