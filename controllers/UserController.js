@@ -28,7 +28,7 @@ const getAllUsers = (req, res) => {
 // Funzione per validare la password
 const validatePassword = (password) => {
   if (!password) {
-    return "La password non può essere vuota.";
+    return "The password is required.";
   }
 
   if (password.length < 8) {
@@ -470,7 +470,7 @@ const changePassword = (req, res) => {
 
   // Controlla se le password coincidono
   if (newPassword !== confirmPassword) {
-    return res.status(400).json({ error: "Le password non coincidono." });
+    return res.status(400).json({ error: "The passwords do not match." });
   }
 
   // Validazione della nuova password
@@ -498,7 +498,9 @@ const changePassword = (req, res) => {
         return res.status(404).json({ error: "Utente non trovato." });
       }
 
-      res.status(200).json({ message: "Password aggiornata con successo." });
+      res
+        .status(200)
+        .json({ message: "The password has been updated successfully." });
     });
   });
 };
