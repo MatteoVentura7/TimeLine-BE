@@ -86,7 +86,7 @@ const createUser = (req, res) => {
             from: "matteo.timeline@gmail.com", // Sostituisci con la tua email
             to: email,
             subject: "Conferma la tua email",
-                    html: `
+            html: `
             <p>Clicca sul seguente link per confermare la tua email:</p>
             <a href="${confirmationLink}">Conferma Email</a>
     `,
@@ -245,7 +245,7 @@ const sendResetPasswordEmail = async (req, res) => {
           from: "matteo.timeline@gmail.com",
           to: email,
           subject: "Richiesta di reset della password",
-           html: `
+          html: `
             <p>Clicca sul seguente link per reimpostare la tua password:</p>
             <a href="http://localhost:5173/reset-password?token=${resetToken}">Reset Password</a>
     `,
@@ -421,35 +421,44 @@ const createNewUser = (req, res) => {
 
       const query =
         "INSERT INTO user (email, password, isConfirmed) VALUES (?, ?, ?)";
-      connection.query(
-        query,
-        [email, hashedPassword, true],
-        (err, result) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json({ error: "Server error" });
-          }
+      connection.query(query, [email, hashedPassword, true], (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Server error" });
         }
-      );
+      });
     });
   });
-} // Chiude la funzione principale
+}; // Chiude la funzione principale
 
 // Funzione per aggiornare l'email di un utente
 const updateUserEmail = (req, res) => {
   const { id } = req.params;
   const { email } = req.body;
 
-  const query = "UPDATE user SET email = ? WHERE id = ?";
-  connection.query(query, [email, id], (err, result) => {
+  // Controlla se l'email esiste già nel database
+  const checkQuery = "SELECT * FROM user WHERE email = ?";
+  connection.query(checkQuery, [email], (err, results) => {
     if (err) {
       console.error(err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    if (results.length > 0) {
+      return res.status(400).json({ error: "Email già esistente" });
+    }
+
+    // Aggiorna l'email dell'utente
+    const query = "UPDATE user SET email = ? WHERE id = ?";
+    connection.query(query, [email, id], (err, result) => {
+      if (err) {
+        console.error(err);
         return res.status(500).json({ error: "Server error" });
       }
       res.status(200).json({ message: "Utente aggiornato con successo" });
     });
-  };
-
+  });
+};
 
 // Esporta le funzioni
 module.exports = {
