@@ -27,6 +27,10 @@ const getAllUsers = (req, res) => {
 
 // Funzione per validare la password
 const validatePassword = (password) => {
+  if (!password) {
+    return "La password non può essere vuota.";
+  }
+
   if (password.length < 8) {
     return "The password must be at least 8 characters long.";
   } else if (!/[A-Z]/.test(password)) {
@@ -460,6 +464,45 @@ const updateUserEmail = (req, res) => {
   });
 };
 
+// Funzione per cambiare la password dato un ID
+const changePassword = (req, res) => {
+  const { id, newPassword, confirmPassword } = req.body;
+
+  // Controlla se le password coincidono
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: "Le password non coincidono." });
+  }
+
+  // Validazione della nuova password
+  const passwordValidationMessage = validatePassword(newPassword);
+  if (passwordValidationMessage) {
+    return res.status(400).json({ error: passwordValidationMessage });
+  }
+
+  // Cripta la nuova password
+  bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore del server." });
+    }
+
+    // Aggiorna la password nel database
+    const query = "UPDATE user SET password = ? WHERE id = ?";
+    connection.query(query, [hashedPassword, id], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Errore del server." });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Utente non trovato." });
+      }
+
+      res.status(200).json({ message: "Password aggiornata con successo." });
+    });
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -473,4 +516,5 @@ module.exports = {
   deleteUser,
   createNewUser,
   updateUserEmail,
+  changePassword,
 };
