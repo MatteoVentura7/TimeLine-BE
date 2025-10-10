@@ -439,6 +439,7 @@ const createNewUser = (req, res) => {
 const updateUserEmail = (req, res) => {
   const { id } = req.params;
   const { email } = req.body;
+  const { isConfirmed } = req.body;
 
   // Controlla se l'email esiste già nel database
   const checkQuery = "SELECT * FROM user WHERE email = ?";
@@ -448,18 +449,19 @@ const updateUserEmail = (req, res) => {
       return res.status(500).json({ error: "Server error" });
     }
 
-    if (results.length > 0) {
+    // Se l'email esiste già ed è associata allo stesso utente, permetti di salvare
+    if (results.length > 0 && results[0].id !== parseInt(id)) {
       return res.status(400).json({ error: "Email already exists" });
     }
 
     // Aggiorna l'email dell'utente
-    const query = "UPDATE user SET email = ? WHERE id = ?";
-    connection.query(query, [email, id], (err, result) => {
+    const query = "UPDATE user SET email = ?, isConfirmed = ? WHERE id = ?";
+    connection.query(query, [email, isConfirmed, id], (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Server error" });
       }
-      res.status(200).json({ message: "User email updated successfully" });
+      res.status(200).json({ message: "User updated successfully" });
     });
   });
 };
