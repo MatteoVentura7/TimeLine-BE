@@ -43,7 +43,7 @@ const validatePassword = (password) => {
 
 // Funzione per aggiungere un nuovo utente
 const createUser = (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role , name , surname } = req.body;
 
   // Validazione della password
   const passwordValidationMessage = validatePassword(password);
@@ -75,10 +75,10 @@ const createUser = (req, res) => {
       const confirmationLink = `http://localhost:5173/confirm-email?token=${emailToken}`;
 
       const query =
-        "INSERT INTO user (email, password, emailToken, isConfirmed, role) VALUES (?, ?, ?, ?, ?)";
+        "INSERT INTO user (email, password, emailToken, isConfirmed, role, name, surname) VALUES (?, ?, ?, ?, ?, ?, ?)";
       connection.query(
         query,
-        [email, hashedPassword, emailToken, false, role],
+        [email, hashedPassword, emailToken, false, role, name, surname],
         (err, result) => {
           if (err) {
             console.error(err);
@@ -440,6 +440,7 @@ const updateUserEmail = (req, res) => {
   const { id } = req.params;
   const { email } = req.body;
   const { isConfirmed } = req.body;
+ 
 
   // Controlla se l'email esiste già nel database
   const checkQuery = "SELECT * FROM user WHERE email = ?";
@@ -455,8 +456,8 @@ const updateUserEmail = (req, res) => {
     }
 
     // Aggiorna l'email dell'utente
-    const query = "UPDATE user SET email = ?, isConfirmed = ? WHERE id = ?";
-    connection.query(query, [email, isConfirmed, id], (err, result) => {
+    const query = "UPDATE user SET email = ?, isConfirmed = ?  WHERE id = ?";
+    connection.query(query, [email, isConfirmed,  id], (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Server error" });
