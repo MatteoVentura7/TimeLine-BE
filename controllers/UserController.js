@@ -43,7 +43,7 @@ const validatePassword = (password) => {
 
 // Funzione per aggiungere un nuovo utente
 const createUser = (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   // Validazione della password
   const passwordValidationMessage = validatePassword(password);
@@ -75,10 +75,10 @@ const createUser = (req, res) => {
       const confirmationLink = `http://localhost:5173/confirm-email?token=${emailToken}`;
 
       const query =
-        "INSERT INTO user (email, password, emailToken, isConfirmed) VALUES (?, ?, ?, ?)";
+        "INSERT INTO user (email, password, emailToken, isConfirmed, role) VALUES (?, ?, ?, ?, ?)";
       connection.query(
         query,
-        [email, hashedPassword, emailToken, false],
+        [email, hashedPassword, emailToken, false, role],
         (err, result) => {
           if (err) {
             console.error(err);
