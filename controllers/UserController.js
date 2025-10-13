@@ -155,15 +155,15 @@ const loginUser = (req, res) => {
         return res.status(401).json({ error: "Credenziali non valide" });
       }
 
-      // Generazione del token JWT
+      // Generazione del token JWT con il campo role
       const token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role },
         "your_secret_key",
         { expiresIn: "1h" }
       );
 
       console.log("Login effettuato con successo");
-      res.status(200).json({ message: "Login successful", token });
+      res.status(200).json({ message: "Login successful", token,role: user.role});
     });
   });
 };
