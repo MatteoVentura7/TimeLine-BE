@@ -12,6 +12,7 @@ const {
   createNewUser,
   updateUserEmail,
   changePassword,
+  getUserById
 } = require("../controllers/UserController");
 const authenticateToken = require("../middlewares/authenticateToken");
 
@@ -30,5 +31,6 @@ router.delete("/:id", deleteUser); // Elimina un utente
 router.post("/new-user", createNewUser); // Crea un nuovo utente
 router.put("/update-email/:id", updateUserEmail); // Aggiorna l'email di un utente
 router.put("/change-password/:id", changePassword); // Cambia la password di un utente
+router.get("/:id", getUserById); // Ottieni un utente per ID
 
 module.exports = router;

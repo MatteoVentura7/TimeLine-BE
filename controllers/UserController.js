@@ -157,13 +157,13 @@ const loginUser = (req, res) => {
 
       // Generazione del token JWT con il campo role
       const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
+        { id: user.id, email: user.email, role: user.role , name: user.name, surname: user.surname },
         "your_secret_key",
         { expiresIn: "1h" }
       );
 
       console.log("Login effettuato con successo");
-      res.status(200).json({ message: "Login successful", token,role: user.role});
+      res.status(200).json({ message: "Login successful", token,role: user.role,id: user.id,name: user.name,surname: user.surname});
     });
   });
 };
@@ -508,6 +508,25 @@ const changePassword = (req, res) => {
   });
 };
 
+// Funzione per ottenere tutti i campi di un utente dato un ID
+const getUserById = (req, res) => {
+  const { id } = req.params;
+
+  const query = "SELECT * FROM user WHERE id = ?";
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Errore del server." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Utente non trovato." });
+    }
+
+    res.status(200).json(results[0]);
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -522,4 +541,5 @@ module.exports = {
   createNewUser,
   updateUserEmail,
   changePassword,
+  getUserById,
 };
