@@ -442,6 +442,7 @@ const updateUserEmail = (req, res) => {
   const { isConfirmed } = req.body;
   const {name} = req.body;
   const {surname} = req.body;
+  const { role } = req.body;
  
 
   // Controlla se l'email esiste già nel database
@@ -458,8 +459,8 @@ const updateUserEmail = (req, res) => {
     }
 
     // Aggiorna l'email dell'utente
-    const query = "UPDATE user SET email = ?, isConfirmed = ?, name = ?, surname = ? WHERE id = ?";
-    connection.query(query, [email, isConfirmed, name, surname, id], (err, result) => {
+    const query = "UPDATE user SET email = ?, isConfirmed = ?, name = ?, surname = ?, role = ? WHERE id = ?";
+    connection.query(query, [email, isConfirmed, name, surname, role, id], (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Server error" });
