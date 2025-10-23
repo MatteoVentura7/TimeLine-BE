@@ -13,15 +13,37 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Funzione per ottenere tutti gli utenti
 const getAllUsers = (req, res) => {
-  const query = "SELECT * FROM user";
-  connection.query(query, (err, results) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 7;
+  const offset = (page - 1) * limit;
+
+  const query = "SELECT * FROM user LIMIT ? OFFSET ?";
+  const countQuery = "SELECT COUNT(*) AS total FROM user";
+
+  connection.query(query, [limit, offset], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).send("Server error");
     }
-    res.json(results);
+
+    connection.query(countQuery, (err, countResults) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Server error");
+      }
+
+      const totalUsers = countResults[0].total;
+      const totalPages = Math.ceil(totalUsers / limit);
+
+      res.json({
+        data: results,
+        page,
+        limit,
+        totalUsers,
+        totalPages,
+      });
+    });
   });
 };
 
