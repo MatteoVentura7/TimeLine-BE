@@ -65,7 +65,7 @@ const validatePassword = (password) => {
 
 // Funzione per aggiungere un nuovo utente
 const createUser = (req, res) => {
-  const { email, password, role , name , surname } = req.body;
+  const { email, password, role, name, surname } = req.body;
 
   // Validazione della password
   const passwordValidationMessage = validatePassword(password);
@@ -179,13 +179,26 @@ const loginUser = (req, res) => {
 
       // Generazione del token JWT con il campo role
       const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role , name: user.name, surname: user.surname },
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          name: user.name,
+          surname: user.surname,
+        },
         "your_secret_key",
         { expiresIn: "1h" }
       );
 
       console.log("Login effettuato con successo");
-      res.status(200).json({ message: "Login successful", token,role: user.role,id: user.id,name: user.name,surname: user.surname});
+      res.status(200).json({
+        message: "Login successful",
+        token,
+        role: user.role,
+        id: user.id,
+        name: user.name,
+        surname: user.surname,
+      });
     });
   });
 };
@@ -457,15 +470,14 @@ const createNewUser = (req, res) => {
   });
 }; // Chiude la funzione principale
 
-// Funzione per aggiornare l'email di un utente
+// Funzione per aggiornare i dati  di un utente
 const updateUserEmail = (req, res) => {
   const { id } = req.params;
   const { email } = req.body;
   const { isConfirmed } = req.body;
-  const {name} = req.body;
-  const {surname} = req.body;
+  const { name } = req.body;
+  const { surname } = req.body;
   const { role } = req.body;
- 
 
   // Controlla se l'email esiste già nel database
   const checkQuery = "SELECT * FROM user WHERE email = ?";
@@ -480,15 +492,20 @@ const updateUserEmail = (req, res) => {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    // Aggiorna l'email dell'utente
-    const query = "UPDATE user SET email = ?, isConfirmed = ?, name = ?, surname = ?, role = ? WHERE id = ?";
-    connection.query(query, [email, isConfirmed, name, surname, role, id], (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Server error" });
+    // Aggiorna i dati  dell'utente
+    const query =
+      "UPDATE user SET email = ?, isConfirmed = ?, name = ?, surname = ?, role = ? WHERE id = ?";
+    connection.query(
+      query,
+      [email, isConfirmed, name, surname, role, id],
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Server error" });
+        }
+        res.status(200).json({ message: "User updated successfully" });
       }
-      res.status(200).json({ message: "User updated successfully" });
-    });
+    );
   });
 };
 
@@ -552,6 +569,30 @@ const getUserById = (req, res) => {
   });
 };
 
+
+const getAuthenticatedUserInfo = (req, res) => {
+  const { id } = req.user; // Estrae l'ID dall'oggetto req.user
+
+  console.log("Dati utente dal token:", req.user); // Log per verificare i dati del token
+  console.log("ID passato alla query:", id); // Log per verificare l'ID estratto
+
+  const query = "SELECT * FROM user WHERE id = ?";
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Errore durante l'esecuzione della query:", err);
+      return res.status(500).json({ error: "Errore del server." });
+    }
+
+    console.log("Risultati della query:", results); // Log per verificare i risultati della query
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Utente non trovato." });
+    }
+
+    res.status(200).json(results[0]);
+  });
+};
+
 // Esporta le funzioni
 module.exports = {
   getAllUsers,
@@ -567,4 +608,5 @@ module.exports = {
   updateUserEmail,
   changePassword,
   getUserById,
+  getAuthenticatedUserInfo,
 };
